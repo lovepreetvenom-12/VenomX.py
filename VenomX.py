@@ -6,22 +6,23 @@ from flask import Flask
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes, MessageHandler, filters
 
-# ===== FLASK FOR RENDER =====
+# ===== FLASK FOR RENDER - FIXED =====
 flask_app = Flask(__name__)
 @flask_app.route('/')
 def home(): return "VenomX Bot is Online ⚡"
-def run_flask(): flask_app.run(host='0.0.0.0', port=10000)
+def run_flask(): 
+    port = int(os.environ.get("PORT", 10000))
+    flask_app.run(host='0.0.0.0', port=port)
 
 # ===== CONFIG =====
 TOKEN = os.getenv("TOKEN")
-ADMIN_ID = 8779030405  # Teri ID
+ADMIN_ID = 8779030405
 ADMIN_USERNAME = "Lovepreetn"
 FREE_LINK = "https://gplinks.co/auto-hill-climb-premium"
 
 USERS_FILE = "users.json"
 WARNINGS_FILE = "warnings.json"
 
-# Kisi bhi bhasha ki gaali + link
 BANNED_WORDS = [
     "fuck","shit","bitch","asshole","bastard","dick","pussy","slut",
     "bc","mc","bkl","bhosdi","bhosdike","chutiya","chut","loda","lodu","gandu","randi","behenchod","madarchod","bhenchod","betichod","harami","kamina","kutta",
@@ -39,14 +40,14 @@ def load_data(file):
 def save_data(file, data):
     with open(file, 'w') as f: json.dump(f, data)
 
-# ===== START =====
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
-    
-    # Agar ban hai to /start bhi kaam nahi karega
     warnings = load_data(WARNINGS_FILE)
     if warnings.get(user_id, 0) >= 3 and int(user_id) != ADMIN_ID:
-        await update.message.reply_text("🚫 Tu 3 warning ke baad BAN hai! Owner se contact kar.")
+        if update.message:
+            await update.message.reply_text("🚫 Tu 3 warning ke baad BAN hai! Owner se contact kar.")
+        else:
+            await update.callback_query.answer("Tu BAN hai!", show_alert=True)
         return
 
     users = load_data(USERS_FILE)
@@ -66,7 +67,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.callback_query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
-# ===== DASHBOARD =====
 async def users_count(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         await update.message.reply_text("❌ Ye sirf Owner ke liye hai!")
@@ -93,7 +93,7 @@ async def banned_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def unban_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID: return
     if not context.args:
-        await update.message.reply_text("Use: /unban USER_ID\nEx: /unban 123456789\n\nPehle /banned se ID dekho.")
+        await update.message.reply_text("Use: /unban USER_ID")
         return
     target_id = context.args[0]
     warnings = load_data(WARNINGS_FILE)
@@ -104,39 +104,30 @@ async def unban_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("❌ Ye ID ban list me nahi hai.")
 
-# ===== ANTI-GAALI + ANTI-LINK SYSTEM =====
 async def check_spam(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text: return
     if update.effective_user.id == ADMIN_ID: return
-
     msg = update.message.text.lower()
     user_id = str(update.effective_user.id)
-    
     is_abuse = False
-    if re.search(LINK_PATTERN, msg):
-        is_abuse = True
+    if re.search(LINK_PATTERN, msg): is_abuse = True
     for word in BANNED_WORDS:
         if word in msg:
             is_abuse = True
             break
-
     if is_abuse:
         warnings = load_data(WARNINGS_FILE)
         warnings[user_id] = warnings.get(user_id, 0) + 1
         save_data(WARNINGS_FILE, warnings)
         count = warnings[user_id]
-        
         if count == 1:
             await update.message.reply_text(f"⚠️ Warning 1/3: @{update.effective_user.first_name} Gaali/Link mat bhej!")
         elif count == 2:
             await update.message.reply_text(f"⚠️ Warning 2/3: Last warning hai!")
         else:
             await update.message.reply_text(f"🚫 BAN! 3 warning ke baad ban kar diya.")
-        
-        try:
-            await update.message.delete()
-        except:
-            pass
+        try: await update.message.delete()
+        except: pass
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -153,6 +144,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await start(update, context)
 
 def main():
+    if not TOKEN:
+        print("ERROR: TOKEN nahi mila! Render Environment me TOKEN add kar.")
+        return
     threading.Thread(target=run_flask, daemon=True).start()
     app = Application.builder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
@@ -162,7 +156,8 @@ def main():
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, check_spam))
     print("VenomX Final Bot Started...")
-    app.run_polling()
+    # YE LINE SABSE ZARURI HAI - Isse bot reply dega
+    app.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
 
 if __name__ == '__main__':
     main()
