@@ -4,7 +4,6 @@ from flask import Flask
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
-# Flask server - Render ko jagaye rakhega (15 min offline fix)
 flask_app = Flask(__name__)
 @flask_app.route('/')
 def home():
@@ -19,10 +18,21 @@ FREE_LINK = "https://gplinks.co/auto-hill-climb-premium"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     name = update.effective_user.first_name
-    text = f"Namaste {name} Ji 🙏\n\n🤖 VENOM-X BOT 🤖\n👇 Select Karo:"
+    text = (
+        f"⚡━━━『 𝐕𝐄𝐍𝐎𝐌-𝐗 』━━━⚡\n\n"
+        f"🔥 𝐇𝐞𝐲 {name} 🔥\n"
+        f"𝐖𝐞𝐥𝐜𝐨𝐦𝐞 𝐓𝐨 𝐓𝐡𝐞 𝐅𝐮𝐭𝐮𝐫𝐞\n\n"
+        f"╔══════════════════╗\n"
+        f"║ 🤖 𝐏𝐑𝐄𝐌𝐈𝐔𝐌 𝐏𝐀𝐍𝐄𝐋𝐒 ║\n"
+        f"║ 💎 𝐕𝐈𝐏 𝐀𝐂𝐂𝐄𝐒𝐒      ║\n"
+        f"║ ⚡ 𝟏𝟎𝟎% 𝐓𝐑𝐔𝐒𝐓𝐄𝐃   ║\n"
+        f"╚══════════════════╝\n\n"
+        f"👇 𝐒𝐄𝐋𝐄𝐂𝐓 𝐊𝐀𝐑𝐎 𝐁𝐀𝐃𝐒𝐇𝐀𝐇 👇"
+    )
     keyboard = [
-        [InlineKeyboardButton("🆓 FREE PANEL 🎁", callback_data='free_panel')],
-        [InlineKeyboardButton("💎 MAIN ID PANEL 👑", callback_data='main_panel')]
+        [InlineKeyboardButton("🎁  𝐅𝐑𝐄𝐄 𝐏𝐀𝐍𝐄𝐋  🎁", callback_data='free_panel')],
+        [InlineKeyboardButton("👑  𝐌𝐀𝐈𝐍 𝐈𝐃 𝐏𝐀𝐍𝐄𝐋  👑", callback_data='main_panel')],
+        [InlineKeyboardButton("💬 𝐒𝐔𝐏𝐎𝐑𝐓 | 𝐇𝐄𝐋𝐏 ⚡", url=f"https://t.me/{ADMIN_USERNAME}")]
     ]
     if update.message:
         await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
@@ -33,17 +43,17 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     if query.data == 'free_panel':
-        text = "🎁 *FREE PANEL*\n\n🔗 Link Ready Hai\n\n📖 *Kaise Kholna Hai:*\n1️⃣ DOWNLOAD NOW dabao\n2️⃣ 10 Sec Wait karo\n3️⃣ Continue dabao\n4️⃣ File Mil Jayegi ✅"
+        text = "🎁 *FREE PANEL UNLOCKED* 🎁\n\n🔥 Hill Climb Premium Ready Hai\n\n⚡ 1 Click Me Download Ho Jayega"
         keyboard = [
-            [InlineKeyboardButton("🚀 DOWNLOAD NOW 🔗", url=FREE_LINK)],
-            [InlineKeyboardButton("🏠 Back to Home", callback_data='home')]
+            [InlineKeyboardButton("🚀 𝐃𝐎𝐖𝐍𝐋𝐎𝐀𝐃 𝐍𝐎𝐖 🔥", url=FREE_LINK)],
+            [InlineKeyboardButton("🔙 𝐁𝐀𝐂𝐊 𝐓𝐎 𝐇𝐎𝐌𝐄", callback_data='home')]
         ]
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='Markdown')
     elif query.data == 'main_panel':
-        text = "👑 *MAIN ID PANEL - @VenomX*\n\n✅ No Ads - Direct File\n✅ Lifetime Access\n✅ VIP Support"
+        text = "👑 *VENOM-X MAIN PANEL* 👑\n\n💎 No Ads - Direct File\n🔥 Lifetime + VIP Support\n⚡ Instant Delivery"
         keyboard = [
-            [InlineKeyboardButton("💬 ADMIN KO MESSAGE KARO 💎", url=f"https://t.me/{ADMIN_USERNAME}")],
-            [InlineKeyboardButton("🏠 Back to Home", callback_data='home')]
+            [InlineKeyboardButton("💎 𝐁𝐔𝐘 𝐍𝐎𝐖 - 𝐀𝐃𝐌𝐈𝐍 𝐒𝐄 𝐁𝐀𝐀𝐓 𝐊𝐀𝐑𝐎 👑", url=f"https://t.me/{ADMIN_USERNAME}")],
+            [InlineKeyboardButton("🔙 𝐁𝐀𝐂𝐊 𝐓𝐎 𝐇𝐎𝐌𝐄", callback_data='home')]
         ]
         await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='Markdown')
     elif query.data == 'home':
@@ -54,7 +64,7 @@ def main():
     app = Application.builder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_click))
-    print("VenomX Running...")
+    print("VenomX VIP Running...")
     app.run_polling()
 
 if __name__ == '__main__':
